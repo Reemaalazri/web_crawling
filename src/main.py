@@ -45,3 +45,36 @@ def load_index() -> InvertedIndexer:
     print(f"Loaded index from {INDEX_FILE}")
 
     return indexer
+
+def print_index_entry(indexer: InvertedIndexer, word: str) -> None:
+    """Print the inverted index entry for one word."""
+    tokens = word.lower().split()
+
+    if not tokens:
+        print("Please provide a word to print.")
+        return
+
+    token = tokens[0]
+
+    if token not in indexer.index:
+        print(f"No index entry found for '{token}'.")
+        return
+
+    print(f"{token}: {indexer.index[token]}")
+
+
+def find_query(indexer: InvertedIndexer, query: str) -> None:
+    """Find pages matching a query."""
+    search_engine = SearchEngine(indexer)
+    response = search_engine.find(query)
+
+    print(response["message"])
+
+    if response["results"]:
+        for result in response["results"]:
+            doc_id = result[0]
+            url = indexer.documents.get(doc_id, {}).get("url", "Unknown URL")
+            print(f"- {url} | {result}")
+
+    if response["suggestions"]:
+        print("Suggestions:", ", ".join(response["suggestions"]))
