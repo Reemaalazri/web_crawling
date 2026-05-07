@@ -185,3 +185,40 @@ def test_extract_text_ignores_sidebar_content() -> None:
     assert "courage" in text
     assert "Top Ten tags" not in text
     assert "love" not in text
+
+# -------------------------
+# Document snippet tests
+# -------------------------
+
+def test_add_document_stores_snippet() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.add_document(
+        doc_id="1",
+        url="https://quotes.toscrape.com/page/1",
+        snippet="Example quote snippet",
+    )
+
+    assert indexer.documents["1"]["snippet"] == "Example quote snippet"
+
+
+def test_index_page_stores_snippet() -> None:
+    indexer = InvertedIndexer()
+
+    page = CrawledPage(
+        url="https://quotes.toscrape.com/page/1",
+        html="""
+        <html>
+            <body>
+                <div class="quote">
+                    <span class="text">A meaningful quote appears here.</span>
+                    <small class="author">Author Name</small>
+                </div>
+            </body>
+        </html>
+        """,
+    )
+
+    indexer.index_page("1", page)
+
+    assert "A meaningful quote appears here." in indexer.documents["1"]["snippet"]
