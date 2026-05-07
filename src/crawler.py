@@ -118,6 +118,29 @@ class WebCrawler:
         except requests.RequestException as error:
             print(f"[Crawler warning] Could not fetch {url}: {error}")
             return None
+
+    def extract_links(self, base_url: str, html: str) -> list[str]:
+        """
+        Extract valid internal links from a page.
+
+        Args:
+            base_url: URL of the page being parsed.
+            html: HTML content of the page.
+
+        Returns:
+            A sorted list of normalised internal URLs.
+        """
+        soup = BeautifulSoup(html, "html.parser")
+        links: set[str] = set()
+
+        for anchor in soup.find_all("a", href=True):
+            absolute_url = urljoin(base_url, anchor["href"])
+            normalised_url = self._normalise_url(absolute_url)
+
+            if self._is_internal_url(normalised_url):
+                links.add(normalised_url)
+
+        return sorted(links)
     
     
     def _is_internal_url(self, url: str) -> bool:
