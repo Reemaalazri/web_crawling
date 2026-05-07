@@ -139,3 +139,19 @@ class InvertedIndexer:
 
         self.index = data.get("index", {})
         self.documents = data.get("documents", {})
+
+    def get_document_frequency(self, token: str) -> int:
+        """
+        Get the number of documents containing a token.
+        """
+        if token not in self.index:
+            return 0
+
+        return len(self.index[token])
+
+    def get_total_documents(self) -> int:
+        """
+        Get the total number of indexed documents.
+        """
+        return len(self.documents)
+

@@ -136,3 +136,25 @@ def test_save_and_load_index(tmp_path) -> None:
 
     assert loaded_indexer.documents == indexer.documents
     assert loaded_indexer.index == indexer.index
+
+# -------------------------
+# Document frequency tests
+# -------------------------
+
+def test_get_document_frequency_counts_documents() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends")
+    indexer.index_document("2", "good people")
+
+    assert indexer.get_document_frequency("good") == 2
+    assert indexer.get_document_frequency("friends") == 1
+
+
+def test_get_total_documents_returns_count() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.add_document("1", "url1")
+    indexer.add_document("2", "url2")
+
+    assert indexer.get_total_documents() == 2
