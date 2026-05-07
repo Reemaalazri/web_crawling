@@ -63,7 +63,7 @@ def print_index_entry(indexer: InvertedIndexer, word: str) -> None:
     print(f"{token}: {indexer.index[token]}")
 
 def find_query(indexer: InvertedIndexer, query: str) -> None:
-    """Find pages matching a query."""
+    """Find pages matching a query and display ranked results."""
     search_engine = SearchEngine(indexer)
     response = search_engine.find(query)
 
@@ -72,13 +72,24 @@ def find_query(indexer: InvertedIndexer, query: str) -> None:
     if response["results"]:
         for result in response["results"]:
             doc_id = result[0]
-            url = indexer.documents.get(doc_id, {}).get("url", "Unknown URL")
-            print(f"- {url} | {result}")
+            value = result[1]
+
+            document = indexer.documents.get(doc_id, {})
+            url = document.get("url", "Unknown URL")
+            snippet = document.get("snippet", "")
+
+            print(f"- {url}")
+
+            if isinstance(value, float):
+                print(f"  Score: {value:.2f}")
+            else:
+                print(f"  Match: {value}")
+
+            if snippet:
+                print(f"  Snippet: {snippet}")
 
     if response["suggestions"]:
         print("Suggestions:", ", ".join(response["suggestions"]))
-
-
 
 def run_shell() -> None:
     """Run the interactive command-line shell."""
