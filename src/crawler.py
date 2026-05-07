@@ -17,6 +17,9 @@ from urllib.parse import urljoin, urlparse
 import requests
 from bs4 import BeautifulSoup
 
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
+
 
 @dataclass(frozen=True)
 class CrawledPage:
@@ -61,10 +64,22 @@ class WebCrawler:
             "register",
             "followme",
         }
-
         self.headers = {
             "User-Agent": "COMP3011-WebCrawler/1.0"
         }
+
+        self.session = requests.Session()
+
+        retry_strategy = Retry(
+            total=3,
+            backoff_factor=1,
+            status_forcelist=[429, 500, 502, 503, 504],
+        )
+
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
 
     def crawl(self) -> list[CrawledPage]:
         """
@@ -124,7 +139,7 @@ class WebCrawler:
             HTML text if successful, otherwise None.
         """
         try:
-            response = requests.get(
+            response = self.session.get(
                 url,
                 headers=self.headers,
                 timeout=self.timeout,

@@ -102,7 +102,11 @@ def test_fetch_page_returns_html_content() -> None:
     mock_response.headers = {"Content-Type": "text/html"}
     mock_response.raise_for_status = Mock()
 
-    with patch("src.crawler.requests.get", return_value=mock_response):
+    with patch.object(
+        crawler.session,
+        "get",
+        return_value=mock_response,
+    ):
         html = crawler.fetch_page("https://quotes.toscrape.com/")
 
     assert html == "<html><body>Hello</body></html>"
@@ -116,7 +120,11 @@ def test_fetch_page_returns_none_for_non_html_content() -> None:
     mock_response.headers = {"Content-Type": "application/pdf"}
     mock_response.raise_for_status = Mock()
 
-    with patch("src.crawler.requests.get", return_value=mock_response):
+    with patch.object(
+        crawler.session,
+        "get",
+        return_value=mock_response,
+    ):
         html = crawler.fetch_page("https://quotes.toscrape.com/file.pdf")
 
     assert html is None
@@ -125,8 +133,9 @@ def test_fetch_page_returns_none_for_non_html_content() -> None:
 def test_fetch_page_handles_request_exception() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
-    with patch(
-        "src.crawler.requests.get",
+    with patch.object(
+        crawler.session,
+        "get",
         side_effect=requests.RequestException,
     ):
         html = crawler.fetch_page("https://quotes.toscrape.com/")
@@ -246,3 +255,11 @@ def test_crawl_skips_already_visited_url() -> None:
         pages = crawler.crawl()
 
     assert len(pages) == 1
+    
+def test_crawler_creates_retry_session() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+    )
+
+    assert crawler.session is not None
