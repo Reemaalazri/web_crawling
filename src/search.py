@@ -246,7 +246,7 @@ class SearchEngine:
                 "message": "Empty query provided.",
             }
 
-        phrase_results = self.search_phrase(query)
+        phrase_results = self.search_phrase(query) if len(tokens) > 1 else []
 
         if phrase_results:
             return {
