@@ -243,7 +243,8 @@ class SearchEngine:
             return {
                 "results": [],
                 "suggestions": [],
-                "message": "Empty query provided.",
+                "message": "Please provide a query to find.",
+                
             }
 
         phrase_results = self.search_phrase(query) if len(tokens) > 1 else []

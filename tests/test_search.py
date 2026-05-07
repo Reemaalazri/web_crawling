@@ -293,5 +293,5 @@ def test_find_handles_empty_query() -> None:
 
     response = search_engine.find("")
 
-    assert response["message"] == "Empty query provided."
+    assert response["message"] == "Please provide a query to find."
     assert response["results"] == []
