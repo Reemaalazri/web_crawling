@@ -7,7 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from src.crawler import WebCrawler
-from src.indexer import InvertedIndexer
+from src.indexer import InvertedIndexer, tokenize
 from src.search import SearchEngine
 
 
@@ -47,8 +47,8 @@ def load_index() -> InvertedIndexer:
     return indexer
 
 def print_index_entry(indexer: InvertedIndexer, word: str) -> None:
-    """Print the inverted index entry for one word."""
-    tokens = word.lower().split()
+    """Print the inverted index entry for one cleaned word."""
+    tokens = tokenize(word)
 
     if not tokens:
         print("Please provide a word to print.")
@@ -61,7 +61,6 @@ def print_index_entry(indexer: InvertedIndexer, word: str) -> None:
         return
 
     print(f"{token}: {indexer.index[token]}")
-
 
 def find_query(indexer: InvertedIndexer, query: str) -> None:
     """Find pages matching a query."""
@@ -106,10 +105,18 @@ def run_shell() -> None:
         if command == "load":
             indexer = load_index()
             continue
+        
+        if command == "print":
+            print_index_entry(indexer, "")
+            continue
 
         if command.startswith("print "):
             word = command.removeprefix("print ").strip()
             print_index_entry(indexer, word)
+            continue
+        
+        if command == "find":
+            find_query(indexer, "")
             continue
 
         if command.startswith("find "):
