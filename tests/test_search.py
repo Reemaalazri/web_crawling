@@ -170,3 +170,41 @@ def test_contains_exact_phrase_returns_false_for_empty_tokens() -> None:
     search_engine = SearchEngine(indexer)
 
     assert not search_engine.contains_exact_phrase("1", [])
+
+# -------------------------
+# Phrase search tests
+# -------------------------
+
+def test_search_phrase_returns_matching_documents() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends are here")
+    indexer.index_document("2", "good people are friends")
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_phrase("good friends")
+
+    assert results == ["1"]
+
+
+def test_search_phrase_returns_empty_for_missing_phrase() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good people are friends")
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_phrase("good friends")
+
+    assert results == []
+
+
+def test_search_phrase_handles_empty_query() -> None:
+    indexer = InvertedIndexer()
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_phrase("")
+
+    assert results == []

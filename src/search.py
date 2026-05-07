@@ -169,3 +169,28 @@ class SearchEngine:
                 return True
 
         return False
+
+    def search_phrase(self, query: str) -> list[str]:
+        """
+        Search for documents containing an exact phrase.
+
+        Args:
+            query: Phrase query.
+
+        Returns:
+            List of matching document IDs.
+        """
+        tokens = tokenize(query)
+
+        if not tokens:
+            return []
+
+        candidate_docs = self.search_all_terms(query)
+
+        matching_docs = []
+
+        for doc_id in candidate_docs:
+            if self.contains_exact_phrase(doc_id, tokens):
+                matching_docs.append(doc_id)
+
+        return matching_docs
