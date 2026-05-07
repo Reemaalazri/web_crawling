@@ -158,6 +158,7 @@ def test_crawl_respects_max_pages() -> None:
 
     assert len(pages) == 2
 
+# Optimisation check
 def test_crawl_avoids_duplicate_urls() -> None:
     crawler = WebCrawler(
         "https://quotes.toscrape.com/",
