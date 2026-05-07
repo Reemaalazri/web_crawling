@@ -90,3 +90,38 @@ class WebCrawler:
                 time.sleep(self.politeness_delay)
 
         return crawled_pages
+    
+    
+    
+    def _is_internal_url(self, url: str) -> bool:
+        """
+        Check whether a URL belongs to the target domain.
+
+        Args:
+            url: URL to check.
+
+        Returns:
+            True if URL is internal, otherwise False.
+        """
+        parsed_url = urlparse(url)
+
+        return (
+            parsed_url.scheme in {"http", "https"}
+            and parsed_url.netloc == self.domain
+        )
+
+    @staticmethod
+    def _normalise_url(url: str) -> str:
+        """
+        Normalise URLs to reduce duplicate crawling.
+
+        Removes fragments and trailing slashes, except for root URLs.
+        """
+        parsed = urlparse(url)
+        cleaned = parsed._replace(fragment="")
+        normalised = cleaned.geturl()
+
+        if normalised.endswith("/") and parsed.path != "/":
+            normalised = normalised.rstrip("/")
+
+        return normalised
