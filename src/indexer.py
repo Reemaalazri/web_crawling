@@ -35,3 +35,13 @@ class InvertedIndexer:
     def __init__(self) -> None:
         self.index: dict[str, dict[str, dict[str, list[int] | int]]] = {}
         self.documents: dict[str, dict[str, str]] = {}
+
+    def add_document(self, doc_id: str, url: str) -> None:
+        """
+        Store document metadata.
+
+        Args:
+            doc_id: Unique document identifier.
+            url: Original page URL.
+        """
+        self.documents[doc_id] = {"url": url}
