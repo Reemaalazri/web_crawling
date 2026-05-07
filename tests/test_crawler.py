@@ -93,6 +93,7 @@ def test_extract_links_returns_only_internal_links() -> None:
 # Page fetching tests
 # -------------------------
 
+# Successful HTML download
 def test_fetch_page_returns_html_content() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
@@ -107,6 +108,7 @@ def test_fetch_page_returns_html_content() -> None:
     assert html == "<html><body>Hello</body></html>"
 
 
+# Crawler ignores PDFs/non-HTML files
 def test_fetch_page_returns_none_for_non_html_content() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
@@ -119,7 +121,7 @@ def test_fetch_page_returns_none_for_non_html_content() -> None:
 
     assert html is None
 
-
+# Crawler safely handles timeouts/network failures
 def test_fetch_page_handles_request_exception() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
@@ -130,3 +132,28 @@ def test_fetch_page_handles_request_exception() -> None:
         html = crawler.fetch_page("https://quotes.toscrape.com/")
 
     assert html is None
+
+# -------------------------
+# BFS crawl behaviour tests
+# -------------------------
+
+def test_crawl_respects_max_pages() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+        max_pages=2,
+    )
+
+    fake_html = """
+    <html>
+        <body>
+            <a href="/page/2/">Page 2</a>
+            <a href="/page/3/">Page 3</a>
+        </body>
+    </html>
+    """
+
+    with patch.object(crawler, "fetch_page", return_value=fake_html):
+        pages = crawler.crawl()
+
+    assert len(pages) == 2
