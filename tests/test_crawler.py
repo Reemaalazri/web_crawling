@@ -27,8 +27,8 @@ def test_normalise_url_removes_trailing_slash_except_root() -> None:
     page_url = crawler._normalise_url("https://quotes.toscrape.com/page/1/")
     root_url = crawler._normalise_url("https://quotes.toscrape.com/")
 
-    assert page_url == "https://quotes.toscrape.com/page/1"
     assert root_url == "https://quotes.toscrape.com/"
+    assert page_url == "https://quotes.toscrape.com/page/1"
 
 # -------------------------
 # Internal URL validation tests
@@ -263,3 +263,16 @@ def test_crawler_creates_retry_session() -> None:
     )
 
     assert crawler.session is not None
+    
+# -------------------------
+# Canonicalisation tests
+# -------------------------
+
+def test_normalise_url_canonicalises_first_paginated_page() -> None:
+    crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
+
+    result = crawler._normalise_url(
+        "https://quotes.toscrape.com/tag/simile/page/1"
+    )
+
+    assert result == "https://quotes.toscrape.com/tag/simile"

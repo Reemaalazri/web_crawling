@@ -224,5 +224,10 @@ class WebCrawler:
 
         if normalised.endswith("/") and parsed.path != "/":
             normalised = normalised.rstrip("/")
+        
+        # Canonicalise first paginated tag pages because
+        # /tag/name and /tag/name/page/1 contain duplicate content.
+        if "/tag/" in normalised and normalised.endswith("/page/1"):
+            normalised = normalised.removesuffix("/page/1")
 
         return normalised
