@@ -43,12 +43,24 @@ class WebCrawler:
         politeness_delay: float = 6.0,
         timeout: float = 10.0,
         max_pages: int | None = None,
+        max_depth: int = 5,
     ) -> None:
         self.start_url = self._normalise_url(start_url)
         self.domain = urlparse(self.start_url).netloc
         self.politeness_delay = politeness_delay
         self.timeout = timeout
         self.max_pages = max_pages
+        self.max_depth = max_depth
+
+        self.blocked_path_keywords = {
+            "trap",
+            "logout",
+            "login",
+            "signin",
+            "signup",
+            "register",
+            "followme",
+        }
 
         self.headers = {
             "User-Agent": "COMP3011-WebCrawler/1.0"
@@ -61,7 +73,8 @@ class WebCrawler:
         Returns:
             A list of CrawledPage objects containing URLs and HTML.
         """
-        frontier: Deque[str] = deque([self.start_url])
+        frontier: Deque[tuple[str, int]] = deque([(self.start_url, 0)])
+        queued: set[str] = {self.start_url}
         visited: set[str] = set()
         crawled_pages: list[CrawledPage] = []
 
@@ -69,9 +82,13 @@ class WebCrawler:
             if self.max_pages is not None and len(crawled_pages) >= self.max_pages:
                 break
 
-            current_url = frontier.popleft()
+            current_url, depth = frontier.popleft()
+            queued.discard(current_url)
 
             if current_url in visited:
+                continue
+
+            if depth > self.max_depth:
                 continue
 
             visited.add(current_url)
@@ -83,8 +100,13 @@ class WebCrawler:
             crawled_pages.append(CrawledPage(url=current_url, html=html))
 
             for link in self.extract_links(current_url, html):
-                if link not in visited and link not in frontier:
-                    frontier.append(link)
+                if (
+                    link not in visited
+                    and link not in queued
+                    and self._is_safe_to_crawl(link)
+                ):
+                    frontier.append((link, depth + 1))
+                    queued.add(link)
 
             if frontier:
                 time.sleep(self.politeness_delay)
@@ -141,6 +163,21 @@ class WebCrawler:
                 links.add(normalised_url)
 
         return sorted(links)
+
+    def _is_safe_to_crawl(self, url: str) -> bool:
+        """
+        Check whether a URL should be crawled.
+
+        This prevents the crawler from following login/logout pages,
+        obvious trap paths, and infinite generated URL chains.
+        """
+        parsed_url = urlparse(url)
+        path = parsed_url.path.lower()
+
+        if any(keyword in path for keyword in self.blocked_path_keywords):
+            return False
+
+        return self._is_internal_url(url)
     
     
     def _is_internal_url(self, url: str) -> bool:
