@@ -60,7 +60,7 @@ class InvertedIndexer:
         """
         tokens = tokenize(text)
 
-        for token in tokens:
+        for position, token in enumerate(tokens):
             if token not in self.index:
                 self.index[token] = {}
 
@@ -71,3 +71,4 @@ class InvertedIndexer:
                 }
 
             self.index[token][doc_id]["frequency"] += 1
+            self.index[token][doc_id]["positions"].append(position)

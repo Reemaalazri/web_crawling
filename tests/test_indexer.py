@@ -62,3 +62,19 @@ def test_index_document_counts_word_frequencies() -> None:
 
     assert indexer.index["good"]["1"]["frequency"] == 2
     assert indexer.index["friends"]["1"]["frequency"] == 1
+
+# -------------------------
+# Positional indexing tests
+# -------------------------
+
+def test_index_document_stores_word_positions() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document(
+        doc_id="1",
+        text="good friends are good",
+    )
+
+    assert indexer.index["good"]["1"]["positions"] == [0, 3]
+    assert indexer.index["friends"]["1"]["positions"] == [1]
+    assert indexer.index["are"]["1"]["positions"] == [2]
