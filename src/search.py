@@ -230,3 +230,42 @@ class SearchEngine:
 
         return sorted(set(suggestions))
 
+    def find(self, query: str) -> dict[str, object]:
+        """
+        Process a full user search query.
+
+        The method first checks for exact phrase matches. If no exact
+        phrase is found, it falls back to TF-IDF ranked retrieval.
+        """
+        tokens = tokenize(query)
+
+        if not tokens:
+            return {
+                "results": [],
+                "suggestions": [],
+                "message": "Empty query provided.",
+            }
+
+        phrase_results = self.search_phrase(query)
+
+        if phrase_results:
+            return {
+                "results": [(doc_id, "exact_phrase") for doc_id in phrase_results],
+                "suggestions": [],
+                "message": "Exact phrase matches found.",
+            }
+
+        ranked_results = self.search_ranked(query)
+
+        if ranked_results:
+            return {
+                "results": ranked_results,
+                "suggestions": [],
+                "message": "Ranked results found.",
+            }
+
+        return {
+            "results": [],
+            "suggestions": self.suggest_terms(query),
+            "message": "No results found.",
+        }

@@ -242,3 +242,56 @@ def test_suggest_terms_handles_empty_query() -> None:
     suggestions = search_engine.suggest_terms("")
 
     assert suggestions == []
+
+# -------------------------
+# Full find query tests
+# -------------------------
+
+def test_find_returns_exact_phrase_matches_first() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends are here")
+    indexer.index_document("2", "good people are friends")
+
+    search_engine = SearchEngine(indexer)
+
+    response = search_engine.find("good friends")
+
+    assert response["message"] == "Exact phrase matches found."
+    assert response["results"] == [("1", "exact_phrase")]
+
+
+def test_find_falls_back_to_ranked_results() -> None:
+    indexer = InvertedIndexer()
+    indexer.add_document("1", "url1")
+    indexer.add_document("2", "url2")
+    indexer.index_document("1", "good people are friends")
+    indexer.index_document("2", "good people")
+
+    search_engine = SearchEngine(indexer)
+
+    response = search_engine.find("good friends")
+
+    assert response["message"] == "Ranked results found."
+    assert response["results"]
+
+
+def test_find_returns_suggestions_when_no_results() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    response = search_engine.find("frinds")
+
+    assert response["message"] == "No results found."
+    assert "friends" in response["suggestions"]
+
+
+def test_find_handles_empty_query() -> None:
+    indexer = InvertedIndexer()
+    search_engine = SearchEngine(indexer)
+
+    response = search_engine.find("")
+
+    assert response["message"] == "Empty query provided."
+    assert response["results"] == []
