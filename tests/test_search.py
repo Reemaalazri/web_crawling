@@ -208,3 +208,37 @@ def test_search_phrase_handles_empty_query() -> None:
     results = search_engine.search_phrase("")
 
     assert results == []
+
+# -------------------------
+# Query suggestion tests
+# -------------------------
+
+def test_suggest_terms_returns_close_match_for_misspelling() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends forever")
+
+    search_engine = SearchEngine(indexer)
+
+    suggestions = search_engine.suggest_terms("frinds")
+
+    assert "friends" in suggestions
+
+
+def test_suggest_terms_returns_empty_for_known_term() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    suggestions = search_engine.suggest_terms("friends")
+
+    assert suggestions == []
+
+
+def test_suggest_terms_handles_empty_query() -> None:
+    indexer = InvertedIndexer()
+    search_engine = SearchEngine(indexer)
+
+    suggestions = search_engine.suggest_terms("")
+
+    assert suggestions == []

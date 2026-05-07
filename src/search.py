@@ -10,6 +10,7 @@ from __future__ import annotations
 from src.indexer import InvertedIndexer, tokenize
 
 import math
+import difflib
 
 class SearchEngine:
     """
@@ -194,3 +195,38 @@ class SearchEngine:
                 matching_docs.append(doc_id)
 
         return matching_docs
+
+    def suggest_terms(self, query: str, max_suggestions: int = 3) -> list[str]:
+        """
+        Suggest similar indexed terms for a misspelled query.
+
+        Args:
+            query: User query.
+            max_suggestions: Maximum number of suggestions to return.
+
+        Returns:
+            A list of suggested terms from the index vocabulary.
+        """
+        tokens = tokenize(query)
+
+        if not tokens:
+            return []
+
+        vocabulary = list(self.indexer.index.keys())
+        suggestions: list[str] = []
+
+        for token in tokens:
+            if token in self.indexer.index:
+                continue
+
+            close_matches = difflib.get_close_matches(
+                token,
+                vocabulary,
+                n=max_suggestions,
+                cutoff=0.75,
+            )
+
+            suggestions.extend(close_matches)
+
+        return sorted(set(suggestions))
+
