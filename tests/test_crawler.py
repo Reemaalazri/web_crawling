@@ -157,3 +157,33 @@ def test_crawl_respects_max_pages() -> None:
         pages = crawler.crawl()
 
     assert len(pages) == 2
+
+def test_crawl_avoids_duplicate_urls() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+        max_pages=10,
+    )
+
+    home_html = """
+    <html>
+        <body>
+            <a href="/page/2/">Page 2</a>
+            <a href="/page/2/#comments">Duplicate Page 2</a>
+        </body>
+    </html>
+    """
+
+    page_two_html = "<html><body>No more links</body></html>"
+
+    def fake_fetch(url: str) -> str:
+        if url == "https://quotes.toscrape.com/":
+            return home_html
+        return page_two_html
+
+    with patch.object(crawler, "fetch_page", side_effect=fake_fetch):
+        pages = crawler.crawl()
+
+    crawled_urls = [page.url for page in pages]
+
+    assert crawled_urls.count("https://quotes.toscrape.com/page/2") == 1
