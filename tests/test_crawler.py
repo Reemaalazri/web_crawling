@@ -227,3 +227,22 @@ def test_crawl_respects_max_depth() -> None:
     assert len(pages) == 1
     assert pages[0].url == "https://quotes.toscrape.com/"
 
+def test_crawl_skips_already_visited_url() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+        max_pages=10,
+    )
+
+    home_html = """
+    <html>
+        <body>
+            <a href="/">Home again</a>
+        </body>
+    </html>
+    """
+
+    with patch.object(crawler, "fetch_page", return_value=home_html):
+        pages = crawler.crawl()
+
+    assert len(pages) == 1
