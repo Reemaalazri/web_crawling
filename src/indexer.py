@@ -24,3 +24,14 @@ def tokenize(text: str) -> list[str]:
         return []
 
     return re.findall(r"[a-zA-Z0-9]+", text.lower())
+
+class InvertedIndexer:
+    """
+    Builds an inverted index from crawled pages.
+
+    The index maps each token to the documents where it appears.
+    """
+
+    def __init__(self) -> None:
+        self.index: dict[str, dict[str, dict[str, list[int] | int]]] = {}
+        self.documents: dict[str, dict[str, str]] = {}
