@@ -4,6 +4,7 @@ Tests for the indexer module.
 
 from src.indexer import tokenize
 from src.indexer import InvertedIndexer
+from src.crawler import CrawledPage
 
 # -------------------------
 # Tokenizer tests
@@ -78,3 +79,42 @@ def test_index_document_stores_word_positions() -> None:
     assert indexer.index["good"]["1"]["positions"] == [0, 3]
     assert indexer.index["friends"]["1"]["positions"] == [1]
     assert indexer.index["are"]["1"]["positions"] == [2]
+
+# -------------------------
+# HTML page indexing tests
+# -------------------------
+
+def test_extract_text_removes_html_tags() -> None:
+    html = """
+    <html>
+        <body>
+            <h1>Hello</h1>
+            <p>Good friends</p>
+        </body>
+    </html>
+    """
+
+    text = InvertedIndexer.extract_text(html)
+
+    assert "Hello" in text
+    assert "Good friends" in text
+
+
+def test_index_page_indexes_html_content() -> None:
+    indexer = InvertedIndexer()
+
+    page = CrawledPage(
+        url="https://quotes.toscrape.com/page/1",
+        html="""
+        <html>
+            <body>
+                <p>Good friends</p>
+            </body>
+        </html>
+        """,
+    )
+
+    indexer.index_page("1", page)
+
+    assert indexer.index["good"]["1"]["frequency"] == 1
+    assert indexer.index["friends"]["1"]["frequency"] == 1

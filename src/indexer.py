@@ -7,6 +7,8 @@ inverted index containing frequency and positional information.
 
 from __future__ import annotations
 
+from src.crawler import CrawledPage
+
 import re
 
 
@@ -72,3 +74,38 @@ class InvertedIndexer:
 
             self.index[token][doc_id]["frequency"] += 1
             self.index[token][doc_id]["positions"].append(position)
+
+    def index_page(
+        self,
+        doc_id: str,
+        page: CrawledPage,
+    ) -> None:
+        """
+        Index a crawled web page.
+
+        Args:
+            doc_id: Unique document identifier.
+            page: CrawledPage object containing URL and HTML.
+        """
+        self.add_document(doc_id, page.url)
+
+        text = self.extract_text(page.html)
+
+        self.index_document(doc_id, text)
+
+    @staticmethod
+    def extract_text(html: str) -> str:
+        """
+        Extract visible text from HTML.
+
+        Args:
+            html: Raw HTML content.
+
+        Returns:
+            Extracted plain text.
+        """
+        from bs4 import BeautifulSoup
+
+        soup = BeautifulSoup(html, "html.parser")
+
+        return soup.get_text(separator=" ", strip=True)
