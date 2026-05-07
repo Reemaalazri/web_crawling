@@ -142,3 +142,31 @@ def test_search_ranked_returns_empty_for_unknown_query() -> None:
     results = search_engine.search_ranked("unknown")
 
     assert results == []
+
+# -------------------------
+# Exact phrase matching tests
+# -------------------------
+
+def test_contains_exact_phrase_returns_true_for_adjacent_terms() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends are here")
+
+    search_engine = SearchEngine(indexer)
+
+    assert search_engine.contains_exact_phrase("1", ["good", "friends"])
+
+
+def test_contains_exact_phrase_returns_false_for_non_adjacent_terms() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good people are friends")
+
+    search_engine = SearchEngine(indexer)
+
+    assert not search_engine.contains_exact_phrase("1", ["good", "friends"])
+
+
+def test_contains_exact_phrase_returns_false_for_empty_tokens() -> None:
+    indexer = InvertedIndexer()
+    search_engine = SearchEngine(indexer)
+
+    assert not search_engine.contains_exact_phrase("1", [])

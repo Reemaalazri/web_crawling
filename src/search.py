@@ -131,3 +131,41 @@ class SearchEngine:
         )
 
         return scored_results
+
+    def contains_exact_phrase(self, doc_id: str, tokens: list[str]) -> bool:
+        """
+        Check whether a document contains the exact query phrase.
+
+        Example:
+            tokens ["good", "friends"] match if "friends" appears
+            immediately after "good" in the same document.
+        """
+        if not tokens:
+            return False
+
+        first_token = tokens[0]
+        first_posting = self.indexer.index.get(first_token, {}).get(doc_id)
+
+        if first_posting is None:
+            return False
+
+        first_positions = first_posting["positions"]
+
+        for start_position in first_positions:
+            phrase_found = True
+
+            for offset, token in enumerate(tokens[1:], start=1):
+                posting = self.indexer.index.get(token, {}).get(doc_id)
+
+                if posting is None:
+                    phrase_found = False
+                    break
+
+                if start_position + offset not in posting["positions"]:
+                    phrase_found = False
+                    break
+
+            if phrase_found:
+                return True
+
+        return False
