@@ -158,3 +158,30 @@ def test_get_total_documents_returns_count() -> None:
     indexer.add_document("2", "url2")
 
     assert indexer.get_total_documents() == 2
+    
+def test_extract_text_ignores_sidebar_content() -> None:
+    html = """
+    <html>
+        <body>
+            <div class="quote">
+                <span class="text">Real quote about courage.</span>
+                <small class="author">Author Name</small>
+                <a class="tag">courage</a>
+            </div>
+
+            <div class="tags-box">
+                <span>Top Ten tags</span>
+                <a>love</a>
+                <a>life</a>
+            </div>
+        </body>
+    </html>
+    """
+
+    text = InvertedIndexer.extract_text(html)
+
+    assert "Real quote about courage." in text
+    assert "Author Name" in text
+    assert "courage" in text
+    assert "Top Ten tags" not in text
+    assert "love" not in text

@@ -42,16 +42,24 @@ class InvertedIndexer:
         self.index: dict[str, dict[str, dict[str, list[int] | int]]] = {}
         self.documents: dict[str, dict[str, str]] = {}
 
-    def add_document(self, doc_id: str, url: str) -> None:
+    def add_document(
+        self,
+        doc_id: str,
+        url: str,
+        snippet: str = "",
+    ) -> None:
         """
         Store document metadata.
 
         Args:
             doc_id: Unique document identifier.
             url: Original page URL.
+            snippet: Short text preview for search results.
         """
-        self.documents[doc_id] = {"url": url}
-
+        self.documents[doc_id] = {
+            "url": url,
+            "snippet": snippet,
+        }
     def index_document(
         self,
         doc_id: str,
@@ -91,27 +99,42 @@ class InvertedIndexer:
             doc_id: Unique document identifier.
             page: CrawledPage object containing URL and HTML.
         """
-        self.add_document(doc_id, page.url)
-
         text = self.extract_text(page.html)
+        snippet = text[:250]
 
+        self.add_document(doc_id, page.url, snippet)
         self.index_document(doc_id, text)
-
     @staticmethod
     def extract_text(html: str) -> str:
         """
-        Extract visible text from HTML.
+        Extract meaningful quote content from HTML.
 
-        Args:
-            html: Raw HTML content.
-
-        Returns:
-            Extracted plain text.
+        Only quote blocks are indexed, avoiding navigation, sidebar,
+        footer text, and repeated top-tag content.
         """
-
         soup = BeautifulSoup(html, "html.parser")
+        quote_blocks = soup.select(".quote")
 
-        return soup.get_text(separator=" ", strip=True)
+        if not quote_blocks:
+            return soup.get_text(separator=" ", strip=True)
+
+        extracted_parts = []
+
+        for quote in quote_blocks:
+            quote_text = quote.select_one(".text")
+            author = quote.select_one(".author")
+            tags = quote.select(".tag")
+
+            if quote_text:
+                extracted_parts.append(quote_text.get_text(" ", strip=True))
+
+            if author:
+                extracted_parts.append(author.get_text(" ", strip=True))
+
+            for tag in tags:
+                extracted_parts.append(tag.get_text(" ", strip=True))
+
+        return " ".join(extracted_parts)
 
     def save(self, file_path: str | Path) -> None:
         """
@@ -154,4 +177,3 @@ class InvertedIndexer:
         Get the total number of indexed documents.
         """
         return len(self.documents)
-
