@@ -112,3 +112,33 @@ def test_calculate_tfidf_score_returns_zero_for_empty_index() -> None:
     score = search_engine.calculate_tfidf_score("1", ["good"])
 
     assert score == 0.0
+
+# -------------------------
+# Ranked retrieval tests
+# -------------------------
+
+def test_search_ranked_orders_documents_by_score() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.add_document("1", "url1")
+    indexer.add_document("2", "url2")
+
+    indexer.index_document("1", "good good good friends")
+    indexer.index_document("2", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_ranked("good")
+
+    assert results[0][0] == "1"
+    assert results[0][1] > results[1][1]
+
+
+def test_search_ranked_returns_empty_for_unknown_query() -> None:
+    indexer = InvertedIndexer()
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_ranked("unknown")
+
+    assert results == []

@@ -95,3 +95,39 @@ class SearchEngine:
             score += term_frequency * inverse_document_frequency
 
         return score
+
+    def search_ranked(self, query: str) -> list[tuple[str, float]]:
+        """
+        Perform ranked retrieval using TF-IDF scoring.
+
+        Args:
+            query: Search query.
+
+        Returns:
+            List of (document ID, score) tuples sorted by score.
+        """
+        tokens = tokenize(query)
+
+        if not tokens:
+            return []
+
+        candidate_docs = set()
+
+        for token in tokens:
+            if token in self.indexer.index:
+                candidate_docs.update(self.indexer.index[token].keys())
+
+        scored_results = []
+
+        for doc_id in candidate_docs:
+            score = self.calculate_tfidf_score(doc_id, tokens)
+
+            if score > 0:
+                scored_results.append((doc_id, score))
+
+        scored_results.sort(
+            key=lambda result: result[1],
+            reverse=True,
+        )
+
+        return scored_results
