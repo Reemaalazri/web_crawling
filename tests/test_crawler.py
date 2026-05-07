@@ -188,3 +188,42 @@ def test_crawl_avoids_duplicate_urls() -> None:
     crawled_urls = [page.url for page in pages]
 
     assert crawled_urls.count("https://quotes.toscrape.com/page/2") == 1
+
+# -------------------------
+# Additional crawler edge-case tests for full coverage
+# -------------------------
+
+def test_crawl_skips_failed_fetch() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+        max_pages=5,
+    )
+
+    with patch.object(crawler, "fetch_page", return_value=None):
+        pages = crawler.crawl()
+
+    assert pages == []
+
+
+def test_crawl_respects_max_depth() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+        max_depth=0,
+    )
+
+    home_html = """
+    <html>
+        <body>
+            <a href="/page/2/">Page 2</a>
+        </body>
+    </html>
+    """
+
+    with patch.object(crawler, "fetch_page", return_value=home_html):
+        pages = crawler.crawl()
+
+    assert len(pages) == 1
+    assert pages[0].url == "https://quotes.toscrape.com/"
+
