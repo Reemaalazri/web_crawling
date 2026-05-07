@@ -51,3 +51,26 @@ def test_is_safe_to_crawl_rejects_login_links() -> None:
     assert not crawler._is_safe_to_crawl(
         "https://quotes.toscrape.com/login"
     )
+
+def test_extract_links_returns_only_internal_links() -> None:
+    crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
+
+    html = """
+    <html>
+        <body>
+            <a href="/page/2/">Next</a>
+            <a href="https://quotes.toscrape.com/tag/life/">Life</a>
+            <a href="https://example.com/">External</a>
+        </body>
+    </html>
+    """
+
+    links = crawler.extract_links(
+        "https://quotes.toscrape.com/",
+        html,
+    )
+
+    assert "https://quotes.toscrape.com/page/2" in links
+    assert "https://quotes.toscrape.com/tag/life" in links
+    assert "https://example.com" not in links
+
