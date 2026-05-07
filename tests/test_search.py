@@ -43,3 +43,44 @@ def test_search_word_handles_empty_query() -> None:
     results = search_engine.search_word("")
 
     assert results == []
+
+# -------------------------
+# Multi-word conjunctive search tests
+# -------------------------
+
+def test_search_all_terms_returns_documents_containing_all_terms() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends")
+    indexer.index_document("2", "good people")
+    indexer.index_document("3", "bad friends")
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_all_terms("good friends")
+
+    assert results == ["1"]
+
+
+def test_search_all_terms_returns_empty_if_one_term_is_missing() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_all_terms("good unknown")
+
+    assert results == []
+
+
+def test_search_all_terms_handles_special_characters() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    results = search_engine.search_all_terms("good!!! friends???")
+
+    assert results == ["1"]

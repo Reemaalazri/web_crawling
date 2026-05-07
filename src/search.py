@@ -39,3 +39,27 @@ class SearchEngine:
             return []
 
         return sorted(self.indexer.index[token].keys())
+
+    def search_all_terms(self, query: str) -> list[str]:
+        """
+        Retrieve documents that contain all query terms.
+
+        This follows conjunctive query processing, where every returned
+        document must contain each token in the query.
+        """
+        tokens = tokenize(query)
+
+        if not tokens:
+            return []
+
+        posting_sets = []
+
+        for token in tokens:
+            if token not in self.indexer.index:
+                return []
+
+            posting_sets.append(set(self.indexer.index[token].keys()))
+
+        matching_docs = set.intersection(*posting_sets)
+
+        return sorted(matching_docs)
