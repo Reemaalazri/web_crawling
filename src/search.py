@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from src.indexer import InvertedIndexer, tokenize
 
+import math
 
 class SearchEngine:
     """
@@ -63,3 +64,34 @@ class SearchEngine:
         matching_docs = set.intersection(*posting_sets)
 
         return sorted(matching_docs)
+
+    def calculate_tfidf_score(self, doc_id: str, tokens: list[str]) -> float:
+        """
+        Calculate a TF-IDF score for a document and query tokens.
+        """
+        total_documents = self.indexer.get_total_documents()
+
+        if total_documents == 0:
+            return 0.0
+
+        score = 0.0
+
+        for token in tokens:
+            posting = self.indexer.index.get(token, {}).get(doc_id)
+
+            if posting is None:
+                continue
+
+            term_frequency = posting["frequency"]
+            document_frequency = self.indexer.get_document_frequency(token)
+
+            if document_frequency == 0:
+                continue
+            
+            inverse_document_frequency = math.log(
+                (total_documents + 1) / (document_frequency + 1)
+            ) + 1
+
+            score += term_frequency * inverse_document_frequency
+
+        return score

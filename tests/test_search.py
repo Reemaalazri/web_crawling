@@ -84,3 +84,31 @@ def test_search_all_terms_handles_special_characters() -> None:
     results = search_engine.search_all_terms("good!!! friends???")
 
     assert results == ["1"]
+
+# -------------------------
+# TF-IDF ranking tests
+# -------------------------
+
+def test_calculate_tfidf_score_prefers_higher_term_frequency() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.add_document("1", "url1")
+    indexer.add_document("2", "url2")
+    indexer.index_document("1", "rare rare")
+    indexer.index_document("2", "rare")
+
+    search_engine = SearchEngine(indexer)
+
+    score_1 = search_engine.calculate_tfidf_score("1", ["rare"])
+    score_2 = search_engine.calculate_tfidf_score("2", ["rare"])
+
+    assert score_1 > score_2
+
+
+def test_calculate_tfidf_score_returns_zero_for_empty_index() -> None:
+    indexer = InvertedIndexer()
+    search_engine = SearchEngine(indexer)
+
+    score = search_engine.calculate_tfidf_score("1", ["good"])
+
+    assert score == 0.0
