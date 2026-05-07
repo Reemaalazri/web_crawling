@@ -90,7 +90,34 @@ class WebCrawler:
                 time.sleep(self.politeness_delay)
 
         return crawled_pages
-    
+
+    def fetch_page(self, url: str) -> str | None:
+        """
+        Download a single web page.
+
+        Args:
+            url: Page URL to fetch.
+
+        Returns:
+            HTML text if successful, otherwise None.
+        """
+        try:
+            response = requests.get(
+                url,
+                headers=self.headers,
+                timeout=self.timeout,
+            )
+            response.raise_for_status()
+
+            content_type = response.headers.get("Content-Type", "")
+            if "text/html" not in content_type:
+                return None
+
+            return response.text
+
+        except requests.RequestException as error:
+            print(f"[Crawler warning] Could not fetch {url}: {error}")
+            return None
     
     
     def _is_internal_url(self, url: str) -> bool:
