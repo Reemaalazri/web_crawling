@@ -47,3 +47,18 @@ def test_add_document_stores_metadata() -> None:
     assert indexer.documents["1"]["url"] == (
         "https://quotes.toscrape.com/page/1"
     )
+
+# -------------------------
+# Frequency indexing tests
+# -------------------------
+
+def test_index_document_counts_word_frequencies() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document(
+        doc_id="1",
+        text="good good friends",
+    )
+
+    assert indexer.index["good"]["1"]["frequency"] == 2
+    assert indexer.index["friends"]["1"]["frequency"] == 1

@@ -45,3 +45,29 @@ class InvertedIndexer:
             url: Original page URL.
         """
         self.documents[doc_id] = {"url": url}
+
+    def index_document(
+        self,
+        doc_id: str,
+        text: str,
+    ) -> None:
+        """
+        Index all tokens in a document.
+
+        Args:
+            doc_id: Unique document identifier.
+            text: Raw document text.
+        """
+        tokens = tokenize(text)
+
+        for token in tokens:
+            if token not in self.index:
+                self.index[token] = {}
+
+            if doc_id not in self.index[token]:
+                self.index[token][doc_id] = {
+                    "frequency": 0,
+                    "positions": [],
+                }
+
+            self.index[token][doc_id]["frequency"] += 1
