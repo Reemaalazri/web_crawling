@@ -78,3 +78,47 @@ def find_query(indexer: InvertedIndexer, query: str) -> None:
 
     if response["suggestions"]:
         print("Suggestions:", ", ".join(response["suggestions"]))
+
+
+
+def run_shell() -> None:
+    """Run the interactive command-line shell."""
+    indexer = InvertedIndexer()
+
+    print("COMP3011 Search Engine Tool")
+    print("Commands: build, load, print <word>, find <query>, exit")
+
+    while True:
+        command = input("> ").strip()
+
+        if not command:
+            print("Please enter a command.")
+            continue
+
+        if command == "exit":
+            print("Goodbye.")
+            break
+
+        if command == "build":
+            indexer = build_index()
+            continue
+
+        if command == "load":
+            indexer = load_index()
+            continue
+
+        if command.startswith("print "):
+            word = command.removeprefix("print ").strip()
+            print_index_entry(indexer, word)
+            continue
+
+        if command.startswith("find "):
+            query = command.removeprefix("find ").strip()
+            find_query(indexer, query)
+            continue
+
+        print("Unknown command. Use: build, load, print <word>, find <query>, exit")
+
+
+if __name__ == "__main__":
+    run_shell()
