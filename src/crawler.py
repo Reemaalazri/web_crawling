@@ -179,7 +179,6 @@ class WebCrawler:
 
         return self._is_internal_url(url)
     
-    
     def _is_internal_url(self, url: str) -> bool:
         """
         Check whether a URL belongs to the target domain.
