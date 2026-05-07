@@ -118,3 +118,21 @@ def test_index_page_indexes_html_content() -> None:
 
     assert indexer.index["good"]["1"]["frequency"] == 1
     assert indexer.index["friends"]["1"]["frequency"] == 1
+
+# -------------------------
+# Index storage tests
+# -------------------------
+
+def test_save_and_load_index(tmp_path) -> None:
+    indexer = InvertedIndexer()
+    indexer.add_document("1", "https://quotes.toscrape.com/page/1")
+    indexer.index_document("1", "good friends good")
+
+    file_path = tmp_path / "index.json"
+    indexer.save(file_path)
+
+    loaded_indexer = InvertedIndexer()
+    loaded_indexer.load(file_path)
+
+    assert loaded_indexer.documents == indexer.documents
+    assert loaded_indexer.index == indexer.index

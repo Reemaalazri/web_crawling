@@ -7,6 +7,10 @@ inverted index containing frequency and positional information.
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
+from bs4 import BeautifulSoup
 from src.crawler import CrawledPage
 
 import re
@@ -104,8 +108,34 @@ class InvertedIndexer:
         Returns:
             Extracted plain text.
         """
-        from bs4 import BeautifulSoup
 
         soup = BeautifulSoup(html, "html.parser")
 
         return soup.get_text(separator=" ", strip=True)
+
+    def save(self, file_path: str | Path) -> None:
+        """
+        Save the index and document metadata to a JSON file.
+        """
+        data = {
+            "index": self.index,
+            "documents": self.documents,
+        }
+
+        path = Path(file_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        with path.open("w", encoding="utf-8") as file:
+            json.dump(data, file, indent=2)
+
+    def load(self, file_path: str | Path) -> None:
+        """
+        Load the index and document metadata from a JSON file.
+        """
+        path = Path(file_path)
+
+        with path.open("r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        self.index = data.get("index", {})
+        self.documents = data.get("documents", {})
