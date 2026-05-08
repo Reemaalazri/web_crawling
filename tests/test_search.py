@@ -295,3 +295,54 @@ def test_find_handles_empty_query() -> None:
 
     assert response["message"] == "Please provide a query to find."
     assert response["results"] == []
+def test_search_all_terms_handles_empty_query() -> None:
+    indexer = InvertedIndexer()
+    search_engine = SearchEngine(indexer)
+
+    assert search_engine.search_all_terms("") == []
+
+
+def test_calculate_tfidf_score_skips_token_with_zero_document_frequency() -> None:
+    indexer = InvertedIndexer()
+    indexer.add_document("1", "url1")
+
+    search_engine = SearchEngine(indexer)
+
+    score = search_engine.calculate_tfidf_score("1", ["missing"])
+
+    assert score == 0.0
+
+
+def test_search_ranked_handles_empty_query() -> None:
+    indexer = InvertedIndexer()
+    search_engine = SearchEngine(indexer)
+
+    assert search_engine.search_ranked("") == []
+
+
+def test_contains_exact_phrase_returns_false_when_first_token_missing() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    assert not search_engine.contains_exact_phrase("1", ["missing", "friends"])
+
+
+def test_contains_exact_phrase_returns_false_when_later_token_missing() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends")
+
+    search_engine = SearchEngine(indexer)
+
+    assert not search_engine.contains_exact_phrase("1", ["good", "missing"])
+
+
+def test_contains_exact_phrase_returns_false_when_later_token_not_in_document() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "good friends")
+    indexer.index_document("2", "missing")
+
+    search_engine = SearchEngine(indexer)
+
+    assert not search_engine.contains_exact_phrase("1", ["good", "missing"])
