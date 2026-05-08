@@ -39,9 +39,6 @@ def test_is_internal_url_accepts_same_domain() -> None:
 
     assert crawler._is_internal_url("https://quotes.toscrape.com/page/1")
 
-# -------------------------
-# Link extraction tests
-# -------------------------
 
 def test_is_internal_url_rejects_external_domain() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
@@ -67,6 +64,10 @@ def test_is_safe_to_crawl_rejects_login_links() -> None:
         "https://quotes.toscrape.com/login"
     )
 
+# -------------------------
+# Link extraction tests
+# -------------------------
+
 def test_extract_links_returns_only_internal_links() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
@@ -90,7 +91,7 @@ def test_extract_links_returns_only_internal_links() -> None:
     assert "https://example.com" not in links
 
 # -------------------------
-# Page fetching tests
+# Page fetching and error handling tests
 # -------------------------
 
 # Successful HTML download
@@ -167,7 +168,10 @@ def test_crawl_respects_max_pages() -> None:
 
     assert len(pages) == 2
 
-# Optimisation check
+# -------------------------
+# Duplicate URL handling tests
+# -------------------------
+
 def test_crawl_avoids_duplicate_urls() -> None:
     crawler = WebCrawler(
         "https://quotes.toscrape.com/",
@@ -277,11 +281,11 @@ def test_normalise_url_canonicalises_first_paginated_page() -> None:
 
     assert result == "https://quotes.toscrape.com/tag/simile"
 
-def test_crawler_skips_already_visited_urls() -> None:
+def test_crawler_does_not_queue_duplicate_links() -> None:
     crawler = WebCrawler(
         "https://quotes.toscrape.com/",
         politeness_delay=0,
-        max_pages=2,
+        max_pages=10,
     )
 
     html = """
@@ -296,4 +300,6 @@ def test_crawler_skips_already_visited_urls() -> None:
     with patch.object(crawler, "fetch_page", return_value=html):
         pages = crawler.crawl()
 
-    assert len(pages) >= 1
+    crawled_urls = [page.url for page in pages]
+
+    assert crawled_urls.count("https://quotes.toscrape.com/page/1") == 1
