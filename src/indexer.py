@@ -49,6 +49,9 @@ class InvertedIndexer:
 
         # doc_id -> metadata used when displaying search results.
         self.documents: dict[str, dict[str, str]] = {}
+        
+        self.document_texts: dict[str,str] = {}
+
 
     def add_document(
         self,
@@ -82,6 +85,7 @@ class InvertedIndexer:
             text: Raw document text.
         """
         tokens = tokenize(text)
+        self.document_texts.setdefault(doc_id, text)
         
         # Store both frequency and positions for each token occurrence.
         for position, token in enumerate(tokens):
@@ -110,6 +114,8 @@ class InvertedIndexer:
             page: CrawledPage object containing URL and HTML.
         """
         text = self.extract_text(page.html)
+
+        self.document_texts[doc_id] = text
         
         # Create a short preview without artificial boundary markers.
         snippet = text.replace(BOUNDARY_TOKEN, "").strip()[:250]
@@ -161,6 +167,7 @@ class InvertedIndexer:
         data = {
             "index": self.index,
             "documents": self.documents,
+            "document_texts": self.document_texts,
         }
 
         path = Path(file_path)
@@ -183,6 +190,7 @@ class InvertedIndexer:
         # Default to empty dictionaries if the file is missing expected keys.
         self.index = data.get("index", {})
         self.documents = data.get("documents", {})
+        self.document_texts = data.get("document_texts", {})
 
     def get_document_frequency(self, token: str) -> int:
         """
