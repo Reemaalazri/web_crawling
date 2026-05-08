@@ -15,9 +15,18 @@ import difflib
 class SearchEngine:
     """
     Search engine using an inverted index.
+
+    Supports:
+    - single-word lookup
+    - all-term matching
+    - exact phrase matching
+    - TF-IDF ranked retrieval
+    - spelling suggestions for missed queries
     """
 
+
     def __init__(self, indexer: InvertedIndexer) -> None:
+        """Initialise the search engine with an existing inverted index."""
         self.indexer = indexer
 
     def search_word(self, query: str) -> list[str]:
@@ -35,6 +44,7 @@ class SearchEngine:
         if not tokens:
             return []
 
+        # For single-word search, only the first cleaned token is used.
         token = tokens[0]
 
         if token not in self.indexer.index:
@@ -48,6 +58,12 @@ class SearchEngine:
 
         This follows conjunctive query processing, where every returned
         document must contain each token in the query.
+
+        Args:
+            query: User query containing one or more terms.
+
+        Returns:
+            Sorted list of document IDs containing every query token.
         """
         tokens = tokenize(query)
 
@@ -56,6 +72,7 @@ class SearchEngine:
 
         posting_sets = []
 
+        # Build one posting set per token, then intersect them.
         for token in tokens:
             if token not in self.indexer.index:
                 return []
@@ -69,6 +86,13 @@ class SearchEngine:
     def calculate_tfidf_score(self, doc_id: str, tokens: list[str]) -> float:
         """
         Calculate a TF-IDF score for a document and query tokens.
+
+        Args:
+            doc_id: Document identifier being scored.
+            tokens: Tokenised query terms.
+
+        Returns:
+            Numeric TF-IDF score for the document.
         """
         total_documents = self.indexer.get_total_documents()
 
@@ -89,6 +113,7 @@ class SearchEngine:
             if document_frequency == 0:
                 continue
             
+            # Smoothed IDF avoids division by zero and keeps rare terms valuable.
             inverse_document_frequency = math.log(
                 (total_documents + 1) / (document_frequency + 1)
             ) + 1
@@ -114,18 +139,21 @@ class SearchEngine:
 
         candidate_docs = set()
 
+        # A document is a candidate if it contains at least one query token.
         for token in tokens:
             if token in self.indexer.index:
                 candidate_docs.update(self.indexer.index[token].keys())
 
         scored_results = []
 
+        # Score each candidate document against the full query.
         for doc_id in candidate_docs:
             score = self.calculate_tfidf_score(doc_id, tokens)
 
             if score > 0:
                 scored_results.append((doc_id, score))
 
+        # Highest-scoring pages should appear first.
         scored_results.sort(
             key=lambda result: result[1],
             reverse=True,
@@ -140,6 +168,13 @@ class SearchEngine:
         Example:
             tokens ["good", "friends"] match if "friends" appears
             immediately after "good" in the same document.
+
+        Args:
+            doc_id: Document identifier to check.
+            tokens: Tokenised phrase query.
+
+        Returns:
+            True if the phrase appears in order and consecutively.
         """
         if not tokens:
             return False
@@ -152,6 +187,7 @@ class SearchEngine:
 
         first_positions = first_posting["positions"]
 
+        # Try each occurrence of the first word as a possible phrase start.
         for start_position in first_positions:
             phrase_found = True
 
@@ -162,6 +198,7 @@ class SearchEngine:
                     phrase_found = False
                     break
 
+                # The next token must appear exactly one position after the previous.
                 if start_position + offset not in posting["positions"]:
                     phrase_found = False
                     break
@@ -186,6 +223,7 @@ class SearchEngine:
         if not tokens:
             return []
 
+        # First reduce the search space to documents containing all terms.
         candidate_docs = self.search_all_terms(query)
 
         matching_docs = []
@@ -216,6 +254,8 @@ class SearchEngine:
         suggestions: list[str] = []
 
         for token in tokens:
+
+            # Do not suggest replacements for terms already in the index.
             if token in self.indexer.index:
                 continue
 
@@ -228,6 +268,7 @@ class SearchEngine:
 
             suggestions.extend(close_matches)
 
+        # Remove duplicates and keep the output deterministic.
         return sorted(set(suggestions))
 
     def find(self, query: str) -> dict[str, object]:
@@ -236,6 +277,12 @@ class SearchEngine:
 
         The method first checks for exact phrase matches. If no exact
         phrase is found, it falls back to TF-IDF ranked retrieval.
+
+        Args:
+            query: Raw query entered by the user.
+
+        Returns:
+            Dictionary containing results, suggestions, and a user message.
         """
         tokens = tokenize(query)
 
@@ -247,6 +294,7 @@ class SearchEngine:
                 
             }
 
+        # Multi-word queries are checked as exact phrases first.
         phrase_results = self.search_phrase(query) if len(tokens) > 1 else []
 
         if phrase_results:
@@ -256,6 +304,7 @@ class SearchEngine:
                 "message": "Exact phrase matches found.",
             }
 
+        # If no phrase match exists, return broader ranked results.
         ranked_results = self.search_ranked(query)
 
         if ranked_results:
@@ -265,6 +314,7 @@ class SearchEngine:
                 "message": "Ranked results found.",
             }
 
+        # If nothing matches, suggest similar words from the index.
         return {
             "results": [],
             "suggestions": self.suggest_terms(query),
