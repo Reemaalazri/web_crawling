@@ -8,7 +8,7 @@ inverted index structure.
 from __future__ import annotations
 
 from src.indexer import InvertedIndexer, tokenize
-
+import re
 import math
 import difflib
 
@@ -229,7 +229,10 @@ class SearchEngine:
         matching_docs = []
 
         for doc_id in candidate_docs:
-            if self.contains_exact_phrase(doc_id, tokens):
+            if (
+                self.contains_exact_phrase(doc_id, tokens)
+                and self.text_contains_exact_phrase(doc_id, tokens)
+            ):
                 matching_docs.append(doc_id)
 
         return matching_docs
@@ -320,3 +323,17 @@ class SearchEngine:
             "suggestions": self.suggest_terms(query),
             "message": "No results found.",
         }
+
+    def text_contains_exact_phrase(self, doc_id: str, tokens: list[str]) -> bool:
+        """Check that phrase terms are separated only by spaces in original text."""
+        text = self.indexer.document_texts.get(doc_id, "")
+
+        if not text:
+            return False
+
+        # Do not allow phrase matching across artificial field boundaries.
+        text = text.replace("BOUNDARYTOKEN", " BOUNDARYTOKEN ")
+
+        pattern = r"\b" + r"\s+".join(re.escape(token) for token in tokens) + r"\b"
+
+        return re.search(pattern, text, flags=re.IGNORECASE) is not None

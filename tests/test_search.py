@@ -351,3 +351,12 @@ def test_contains_exact_phrase_ignores_tokens_from_other_documents() -> None:
     search_engine = SearchEngine(indexer)
 
     assert not search_engine.contains_exact_phrase("1", ["good", "missing"])
+
+def test_search_phrase_does_not_cross_comma() -> None:
+    indexer = InvertedIndexer()
+    indexer.index_document("1", "Good friends, good books")
+
+    search_engine = SearchEngine(indexer)
+
+    assert search_engine.search_phrase("good friends") == ["1"]
+    assert search_engine.search_phrase("friends good") == []
