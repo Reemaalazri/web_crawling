@@ -48,13 +48,17 @@ class WebCrawler:
         max_pages: int | None = None,
         max_depth: int = 5,
     ) -> None:
+        # Store the canonical start URL so duplicate forms are avoided later.
         self.start_url = self._normalise_url(start_url)
         self.domain = urlparse(self.start_url).netloc
+
+        # Coursework politeness and safety controls.
         self.politeness_delay = politeness_delay
         self.timeout = timeout
         self.max_pages = max_pages
         self.max_depth = max_depth
 
+        # Avoid crawling routes that are likely to be traps or account pages.
         self.blocked_path_keywords = {
             "trap",
             "logout",
@@ -64,10 +68,13 @@ class WebCrawler:
             "register",
             "followme",
         }
+
+        # Identify the crawler clearly when sending requests.
         self.headers = {
             "User-Agent": "COMP3011-WebCrawler/1.0"
         }
 
+        # Reuse one session for efficiency and configure retries for transient errors.
         self.session = requests.Session()
 
         retry_strategy = Retry(
@@ -88,18 +95,25 @@ class WebCrawler:
         Returns:
             A list of CrawledPage objects containing URLs and HTML.
         """
+
+        # Each frontier item stores the URL and its depth from the start page.
         frontier: Deque[tuple[str, int]] = deque([(self.start_url, 0)])
+
+        # queued prevents the same URL being added many times before it is visited.
         queued: set[str] = {self.start_url}
         visited: set[str] = set()
         crawled_pages: list[CrawledPage] = []
 
         while frontier:
+
+            # Stop early if a page limit is used during testing or demonstrations.
             if self.max_pages is not None and len(crawled_pages) >= self.max_pages:
                 break
 
             current_url, depth = frontier.popleft()
             queued.discard(current_url)
 
+            # Skip URLs already processed or deeper than the allowed crawl depth.
             if current_url in visited:
                 continue
 
@@ -114,6 +128,7 @@ class WebCrawler:
 
             crawled_pages.append(CrawledPage(url=current_url, html=html))
 
+            # Add safe, unseen internal links to the BFS frontier.
             for link in self.extract_links(current_url, html):
                 if (
                     link not in visited
@@ -123,6 +138,7 @@ class WebCrawler:
                     frontier.append((link, depth + 1))
                     queued.add(link)
 
+            # Wait between successful crawl steps to respect the politeness window.
             if frontier:
                 time.sleep(self.politeness_delay)
 
@@ -146,6 +162,7 @@ class WebCrawler:
             )
             response.raise_for_status()
 
+            # Only index HTML pages, not files such as images or PDFs.
             content_type = response.headers.get("Content-Type", "")
             if "text/html" not in content_type:
                 return None
@@ -153,6 +170,8 @@ class WebCrawler:
             return response.text
 
         except requests.RequestException as error:
+
+            # Fail gracefully so one broken request does not stop the full crawl.
             print(f"[Crawler warning] Could not fetch {url}: {error}")
             return None
 
@@ -170,6 +189,7 @@ class WebCrawler:
         soup = BeautifulSoup(html, "html.parser")
         links: set[str] = set()
 
+        # Convert relative links into absolute URLs before checking the domain.
         for anchor in soup.find_all("a", href=True):
             absolute_url = urljoin(base_url, anchor["href"])
             normalised_url = self._normalise_url(absolute_url)
@@ -177,6 +197,7 @@ class WebCrawler:
             if self._is_internal_url(normalised_url):
                 links.add(normalised_url)
 
+        # Sorting makes crawl order deterministic, which helps testing.
         return sorted(links)
 
     def _is_safe_to_crawl(self, url: str) -> bool:
@@ -189,6 +210,7 @@ class WebCrawler:
         parsed_url = urlparse(url)
         path = parsed_url.path.lower()
 
+        # Reject URLs containing known unsafe or unnecessary path keywords.
         if any(keyword in path for keyword in self.blocked_path_keywords):
             return False
 
@@ -219,9 +241,12 @@ class WebCrawler:
         Removes fragments and trailing slashes, except for root URLs.
         """
         parsed = urlparse(url)
+
+        # Remove fragments such as #section because they point to the same page.
         cleaned = parsed._replace(fragment="")
         normalised = cleaned.geturl()
 
+        # Remove trailing slashes from non-root paths to avoid duplicate URLs.
         if normalised.endswith("/") and parsed.path != "/":
             normalised = normalised.rstrip("/")
         
