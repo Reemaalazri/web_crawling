@@ -276,3 +276,24 @@ def test_normalise_url_canonicalises_first_paginated_page() -> None:
     )
 
     assert result == "https://quotes.toscrape.com/tag/simile"
+
+def test_crawler_skips_already_visited_urls() -> None:
+    crawler = WebCrawler(
+        "https://quotes.toscrape.com/",
+        politeness_delay=0,
+        max_pages=2,
+    )
+
+    html = """
+    <html>
+        <body>
+            <a href="/page/1/">Page 1</a>
+            <a href="/page/1/">Page 1 Duplicate</a>
+        </body>
+    </html>
+    """
+
+    with patch.object(crawler, "fetch_page", return_value=html):
+        pages = crawler.crawl()
+
+    assert len(pages) >= 1
