@@ -74,7 +74,7 @@ The engine supports positional phrase search.
 Example:
 
 ```
-find "good friends"
+find good friends
 ```
 
 This only matches documents where:
@@ -96,6 +96,8 @@ find love opposite
 ```
 
 Documents are ranked by relevance score.
+
+The engine also generates contextual snippets centred around matching query terms.
 
 ### Query Suggestions
 Misspelled terms are handled using approximate matching.
@@ -125,6 +127,7 @@ web_crawling/
 │   ├── test_crawler.py
 │   ├── test_indexer.py
 │   ├── test_search.py
+│   ├── test_main.py
 │   └── test_benchmark.py
 │
 ├── benchmarks/
@@ -187,7 +190,7 @@ Loads the saved JSON index from disk.
 
 ```bash
 find love
-find "good friends"
+find good friends
 find love opposite
 ```
 
@@ -233,7 +236,7 @@ Tests include:
 - Positional indexing
 - Exact phrase matching
 - Ranked retrieval
-- Query suggestions
+- Approximate query suggestions for misspelled terms
 - Defensive edge cases
 - Benchmark execution
 
@@ -245,15 +248,17 @@ python -m pytest
 
 ### Run Coverage Report
 ```bash
-python -m pytest --cov=src.crawler --cov=src.indexer --cov=src.search --cov-report=term-missing
+python -m pytest --cov=src --cov-report=term-missing
 ```
 
 Example result:
 
 ```bash
-64 passed
-97% total coverage
+83 passed
+96% total coverage
 ```
+
+The final implementation includes 83 automated tests covering crawling, indexing, retrieval, CLI handling, benchmarking and edge-case behaviour.
 
 ## Mocking Strategy
 Crawler network requests are mocked using:
@@ -359,9 +364,9 @@ Possible future extensions:
 - Stop-word filtering
 - Stemming and lemmatisation
 - PageRank-based scoring
-- distributed indexing
-- query expansion
-- semantic retrieval using embeddings
+- Distributed indexing
+- Query expansion
+- Semantic retrieval using embeddings
 
 ## Author
 Reema Alazri
