@@ -244,7 +244,7 @@ def test_suggest_terms_handles_empty_query() -> None:
     assert suggestions == []
 
 # -------------------------
-# Full find query tests
+# Full query processing tests
 # -------------------------
 
 def test_find_returns_exact_phrase_matches_first() -> None:
@@ -295,6 +295,11 @@ def test_find_handles_empty_query() -> None:
 
     assert response["message"] == "Please provide a query to find."
     assert response["results"] == []
+
+# -------------------------
+# Additional edge-case tests
+# -------------------------
+
 def test_search_all_terms_handles_empty_query() -> None:
     indexer = InvertedIndexer()
     search_engine = SearchEngine(indexer)
@@ -302,7 +307,7 @@ def test_search_all_terms_handles_empty_query() -> None:
     assert search_engine.search_all_terms("") == []
 
 
-def test_calculate_tfidf_score_skips_token_with_zero_document_frequency() -> None:
+def test_calculate_tfidf_score_handles_missing_token() -> None:
     indexer = InvertedIndexer()
     indexer.add_document("1", "url1")
 
@@ -338,7 +343,7 @@ def test_contains_exact_phrase_returns_false_when_later_token_missing() -> None:
     assert not search_engine.contains_exact_phrase("1", ["good", "missing"])
 
 
-def test_contains_exact_phrase_returns_false_when_later_token_not_in_document() -> None:
+def test_contains_exact_phrase_ignores_tokens_from_other_documents() -> None:
     indexer = InvertedIndexer()
     indexer.index_document("1", "good friends")
     indexer.index_document("2", "missing")
