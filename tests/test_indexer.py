@@ -81,7 +81,7 @@ def test_index_document_stores_word_positions() -> None:
     assert indexer.index["are"]["1"]["positions"] == [2]
 
 # -------------------------
-# HTML page indexing tests
+# HTML text extraction and page indexing tests
 # -------------------------
 
 def test_extract_text_removes_html_tags() -> None:
@@ -158,7 +158,19 @@ def test_get_total_documents_returns_count() -> None:
     indexer.add_document("2", "url2")
 
     assert indexer.get_total_documents() == 2
-    
+
+
+def test_get_document_frequency_returns_zero_for_missing_token() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends")
+
+    assert indexer.get_document_frequency("missing") == 0
+
+# -------------------------
+# Quote-specific extraction tests
+# -------------------------
+
 def test_extract_text_ignores_sidebar_content() -> None:
     html = """
     <html>
@@ -222,10 +234,3 @@ def test_index_page_stores_snippet() -> None:
     indexer.index_page("1", page)
 
     assert "A meaningful quote appears here." in indexer.documents["1"]["snippet"]
-
-def test_get_document_frequency_returns_zero_for_missing_token() -> None:
-    indexer = InvertedIndexer()
-
-    indexer.index_document("1", "good friends")
-
-    assert indexer.get_document_frequency("missing") == 0
