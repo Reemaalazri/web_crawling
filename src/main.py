@@ -3,7 +3,7 @@ Command-line interface for COMP3011 Coursework 2.
 """
 
 from __future__ import annotations
-
+import re
 from pathlib import Path
 
 from src.crawler import WebCrawler
@@ -61,28 +61,36 @@ def load_index() -> InvertedIndexer:
 
     return indexer
 
-def print_index_entry(indexer: InvertedIndexer, word: str) -> None:
-    """
-    Print the inverted index entry for one cleaned word.
-
-    Args:
-        indexer: Loaded inverted index.
-        word: Word entered by the user.
-    """
-    tokens = tokenize(word)
+def print_index_entry(indexer: InvertedIndexer, query: str) -> None:
+    """Print index information for a word or exact phrase."""
+    tokens = tokenize(query)
 
     if not tokens:
-        print("Please provide a word to print.")
+        print("Please provide a word or phrase to print.")
         return
 
-    # Use the first cleaned token after normalisation.
-    token = tokens[0]
+    if len(tokens) == 1:
+        token = tokens[0]
 
-    if token not in indexer.index:
-        print(f"No index entry found for '{token}'.")
+        if token not in indexer.index:
+            print(f"No index entry found for '{token}'.")
+            return
+
+        print(f"{token}: {indexer.index[token]}")
         return
 
-    print(f"{token}: {indexer.index[token]}")
+    search_engine = SearchEngine(indexer)
+    phrase_docs = search_engine.search_phrase(query)
+
+    if not phrase_docs:
+        print(f"No exact phrase index match found for '{query}'.")
+        return
+
+    print("Exact phrase index matches found.")
+    for doc_id in phrase_docs:
+        document = indexer.documents.get(doc_id, {})
+        url = document.get("url", "Unknown URL")
+        print(f"- {url} | Document ID: {doc_id}")
 
 def find_query(indexer: InvertedIndexer, query: str) -> None:
     """
@@ -105,7 +113,9 @@ def find_query(indexer: InvertedIndexer, query: str) -> None:
 
             document = indexer.documents.get(doc_id, {})
             url = document.get("url", "Unknown URL")
-            snippet = document.get("snippet", "")
+
+            full_text = indexer.document_texts.get(doc_id, document.get("snippet", ""))
+            snippet = make_query_snippet(full_text, query)
 
             print(f"- {url}")
 
@@ -121,6 +131,32 @@ def find_query(indexer: InvertedIndexer, query: str) -> None:
     # Show spelling suggestions if no results were found.
     if response["suggestions"]:
         print("Suggestions:", ", ".join(response["suggestions"]))
+
+import re
+
+def make_query_snippet(text: str, query: str, length: int = 250) -> str:
+    """Return a snippet centred around the query phrase or first query term."""
+    cleaned_text = text.replace("BOUNDARYTOKEN", " ")
+    tokens = tokenize(query)
+
+    if not tokens:
+        return cleaned_text[:length]
+
+    # Match exact query terms in order, allowing punctuation/spaces between them.
+    pattern = r"\b" + r"\W+".join(re.escape(token) for token in tokens) + r"\b"
+    match = re.search(pattern, cleaned_text, flags=re.IGNORECASE)
+
+    if match is None:
+        # Fallback: show around the first query word.
+        match = re.search(r"\b" + re.escape(tokens[0]) + r"\b", cleaned_text, flags=re.IGNORECASE)
+
+    if match is None:
+        return cleaned_text[:length]
+
+    start = max(match.start() - 80, 0)
+    end = min(match.end() + 170, len(cleaned_text))
+
+    return cleaned_text[start:end].strip()
 
 def run_shell() -> None:
     """
