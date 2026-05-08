@@ -15,6 +15,8 @@ from src.crawler import CrawledPage
 
 import re
 
+BOUNDARY_TOKEN = "BOUNDARYTOKEN"
+
 
 def tokenize(text: str) -> list[str]:
     """
@@ -60,6 +62,7 @@ class InvertedIndexer:
             "url": url,
             "snippet": snippet,
         }
+
     def index_document(
         self,
         doc_id: str,
@@ -100,10 +103,11 @@ class InvertedIndexer:
             page: CrawledPage object containing URL and HTML.
         """
         text = self.extract_text(page.html)
-        snippet = text[:250]
+        snippet = text.replace(BOUNDARY_TOKEN, "").strip()[:250]
 
         self.add_document(doc_id, page.url, snippet)
         self.index_document(doc_id, text)
+
     @staticmethod
     def extract_text(html: str) -> str:
         """
@@ -127,12 +131,15 @@ class InvertedIndexer:
 
             if quote_text:
                 extracted_parts.append(quote_text.get_text(" ", strip=True))
+                extracted_parts.append(BOUNDARY_TOKEN)
 
             if author:
                 extracted_parts.append(author.get_text(" ", strip=True))
+                extracted_parts.append(BOUNDARY_TOKEN)
 
             for tag in tags:
                 extracted_parts.append(tag.get_text(" ", strip=True))
+                extracted_parts.append(BOUNDARY_TOKEN)
 
         return " ".join(extracted_parts)
 
