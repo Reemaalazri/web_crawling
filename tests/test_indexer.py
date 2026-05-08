@@ -222,3 +222,10 @@ def test_index_page_stores_snippet() -> None:
     indexer.index_page("1", page)
 
     assert "A meaningful quote appears here." in indexer.documents["1"]["snippet"]
+
+def test_get_document_frequency_returns_zero_for_missing_token() -> None:
+    indexer = InvertedIndexer()
+
+    indexer.index_document("1", "good friends")
+
+    assert indexer.get_document_frequency("missing") == 0
