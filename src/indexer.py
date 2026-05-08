@@ -15,6 +15,7 @@ from src.crawler import CrawledPage
 
 import re
 
+# Used to separate quote text, author names, and tags before tokenisation.
 BOUNDARY_TOKEN = "BOUNDARYTOKEN"
 
 
@@ -31,6 +32,7 @@ def tokenize(text: str) -> list[str]:
     if not text:
         return []
 
+    # Keep only letters and numbers, then normalise everything to lowercase.
     return re.findall(r"[a-zA-Z0-9]+", text.lower())
 
 class InvertedIndexer:
@@ -41,7 +43,11 @@ class InvertedIndexer:
     """
 
     def __init__(self) -> None:
+        
+        # token -> doc_id -> {"frequency": count, "positions": [word positions]}
         self.index: dict[str, dict[str, dict[str, list[int] | int]]] = {}
+
+        # doc_id -> metadata used when displaying search results.
         self.documents: dict[str, dict[str, str]] = {}
 
     def add_document(
@@ -76,7 +82,8 @@ class InvertedIndexer:
             text: Raw document text.
         """
         tokens = tokenize(text)
-
+        
+        # Store both frequency and positions for each token occurrence.
         for position, token in enumerate(tokens):
             if token not in self.index:
                 self.index[token] = {}
@@ -103,6 +110,8 @@ class InvertedIndexer:
             page: CrawledPage object containing URL and HTML.
         """
         text = self.extract_text(page.html)
+        
+        # Create a short preview without artificial boundary markers.
         snippet = text.replace(BOUNDARY_TOKEN, "").strip()[:250]
 
         self.add_document(doc_id, page.url, snippet)
@@ -119,6 +128,7 @@ class InvertedIndexer:
         soup = BeautifulSoup(html, "html.parser")
         quote_blocks = soup.select(".quote")
 
+        # Fallback for pages that do not use the expected quote structure.
         if not quote_blocks:
             return soup.get_text(separator=" ", strip=True)
 
@@ -129,6 +139,7 @@ class InvertedIndexer:
             author = quote.select_one(".author")
             tags = quote.select(".tag")
 
+            # Add boundary markers so phrase matching does not cross fields.
             if quote_text:
                 extracted_parts.append(quote_text.get_text(" ", strip=True))
                 extracted_parts.append(BOUNDARY_TOKEN)
@@ -153,6 +164,8 @@ class InvertedIndexer:
         }
 
         path = Path(file_path)
+        
+        # Create the output folder automatically if it does not exist.
         path.parent.mkdir(parents=True, exist_ok=True)
 
         with path.open("w", encoding="utf-8") as file:
@@ -167,6 +180,7 @@ class InvertedIndexer:
         with path.open("r", encoding="utf-8") as file:
             data = json.load(file)
 
+        # Default to empty dictionaries if the file is missing expected keys.
         self.index = data.get("index", {})
         self.documents = data.get("documents", {})
 
