@@ -61,6 +61,7 @@ def load_index() -> InvertedIndexer:
 
     return indexer
 
+
 def print_index_entry(indexer: InvertedIndexer, query: str) -> None:
     """Print index information for a word or exact phrase."""
     tokens = tokenize(query)
@@ -92,6 +93,7 @@ def print_index_entry(indexer: InvertedIndexer, query: str) -> None:
         url = document.get("url", "Unknown URL")
         print(f"- {url} | Document ID: {doc_id}")
 
+
 def find_query(indexer: InvertedIndexer, query: str) -> None:
     """
     Find pages matching a query and display ranked results.
@@ -114,7 +116,10 @@ def find_query(indexer: InvertedIndexer, query: str) -> None:
             document = indexer.documents.get(doc_id, {})
             url = document.get("url", "Unknown URL")
 
-            full_text = indexer.document_texts.get(doc_id, document.get("snippet", ""))
+            full_text = indexer.document_texts.get(
+                doc_id,
+                document.get("snippet", ""),
+            )
             snippet = make_query_snippet(full_text, query)
 
             print(f"- {url}")
@@ -132,7 +137,6 @@ def find_query(indexer: InvertedIndexer, query: str) -> None:
     if response["suggestions"]:
         print("Suggestions:", ", ".join(response["suggestions"]))
 
-import re
 
 def make_query_snippet(text: str, query: str, length: int = 250) -> str:
     """Return a snippet centred around the query phrase or first query term."""
@@ -142,13 +146,18 @@ def make_query_snippet(text: str, query: str, length: int = 250) -> str:
     if not tokens:
         return cleaned_text[:length]
 
-    # Match exact query terms in order, allowing punctuation/spaces between them.
+    # Match exact query terms in order,
+    # allowing punctuation/spaces between them.
     pattern = r"\b" + r"\W+".join(re.escape(token) for token in tokens) + r"\b"
     match = re.search(pattern, cleaned_text, flags=re.IGNORECASE)
 
     if match is None:
         # Fallback: show around the first query word.
-        match = re.search(r"\b" + re.escape(tokens[0]) + r"\b", cleaned_text, flags=re.IGNORECASE)
+        match = re.search(
+            r"\b" + re.escape(tokens[0]) + r"\b",
+            cleaned_text,
+            flags=re.IGNORECASE,
+        )
 
     if match is None:
         return cleaned_text[:length]
@@ -157,6 +166,7 @@ def make_query_snippet(text: str, query: str, length: int = 250) -> str:
     end = min(match.end() + 170, len(cleaned_text))
 
     return cleaned_text[start:end].strip()
+
 
 def run_shell() -> None:
     """
@@ -205,7 +215,7 @@ def run_shell() -> None:
             word = command.removeprefix("print ").strip()
             print_index_entry(indexer, word)
             continue
-        
+
         # Handle missing arguments for find command.
         if command == "find":
             find_query(indexer, "")
@@ -216,7 +226,10 @@ def run_shell() -> None:
             find_query(indexer, query)
             continue
 
-        print("Unknown command. Use: build, load, print <word>, find <query>, exit")
+        print(
+            "Unknown command. Use: build, load, "
+            "print <word>, find <query>, exit"
+        )
 
 
 # Start the interactive shell only when the file is run directly.

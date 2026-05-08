@@ -3,7 +3,6 @@ Tests for the command-line interface helper functions in main.py.
 """
 
 from unittest.mock import Mock, patch
-from pathlib import Path
 
 from src.crawler import CrawledPage
 from src.indexer import InvertedIndexer
@@ -98,7 +97,10 @@ def test_find_query_prints_suggestions(capsys):
 
 
 def test_make_query_snippet_centres_query():
-    text = "This is some text before. Good friends are important. This is after."
+    text = (
+        "This is some text before. "
+        "Good friends are important. This is after."
+    )
 
     snippet = main.make_query_snippet(text, "good friends")
 
@@ -121,14 +123,21 @@ def test_build_index_saves_crawled_pages(capsys, tmp_path):
     fake_pages = [
         CrawledPage(
             url="https://example.com",
-            html='<div class="quote"><span class="text">Good friends</span><small class="author">Mark Twain</small></div>',
+            html=(
+                '<div class="quote"><span class="text">Good friends</span>'
+                '<small class="author">Mark Twain</small></div>'
+            ),
         )
     ]
 
     mock_crawler = Mock()
     mock_crawler.crawl.return_value = fake_pages
 
-    with patch.object(main, "INDEX_FILE", fake_index), patch.object(main, "WebCrawler", return_value=mock_crawler):
+    with patch.object(main, "INDEX_FILE", fake_index), patch.object(
+        main,
+        "WebCrawler",
+        return_value=mock_crawler
+    ):
         indexer = main.build_index()
 
     output = capsys.readouterr().out
@@ -153,6 +162,7 @@ def test_run_shell_unknown_command(capsys):
     output = capsys.readouterr().out
     assert "Unknown command." in output
     assert "Goodbye." in output
+
 
 def test_run_shell_build_command(capsys):
     with patch("builtins.input", side_effect=["build", "exit"]):

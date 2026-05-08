@@ -11,6 +11,7 @@ import requests
 # URL normalisation tests
 # -------------------------
 
+
 def test_normalise_url_removes_fragment() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
@@ -34,6 +35,7 @@ def test_normalise_url_removes_trailing_slash_except_root() -> None:
 # Internal URL validation tests
 # -------------------------
 
+
 def test_is_internal_url_accepts_same_domain() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
 
@@ -48,6 +50,7 @@ def test_is_internal_url_rejects_external_domain() -> None:
 # -------------------------
 # Crawler safety tests
 # -------------------------
+
 
 def test_is_safe_to_crawl_rejects_trap_links() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
@@ -67,6 +70,7 @@ def test_is_safe_to_crawl_rejects_login_links() -> None:
 # -------------------------
 # Link extraction tests
 # -------------------------
+
 
 def test_extract_links_returns_only_internal_links() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
@@ -93,6 +97,7 @@ def test_extract_links_returns_only_internal_links() -> None:
 # -------------------------
 # Page fetching and error handling tests
 # -------------------------
+
 
 # Successful HTML download
 def test_fetch_page_returns_html_content() -> None:
@@ -130,6 +135,7 @@ def test_fetch_page_returns_none_for_non_html_content() -> None:
 
     assert html is None
 
+
 # Crawler safely handles timeouts/network failures
 def test_fetch_page_handles_request_exception() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
@@ -146,6 +152,7 @@ def test_fetch_page_handles_request_exception() -> None:
 # -------------------------
 # BFS crawl behaviour tests
 # -------------------------
+
 
 def test_crawl_respects_max_pages() -> None:
     crawler = WebCrawler(
@@ -171,6 +178,7 @@ def test_crawl_respects_max_pages() -> None:
 # -------------------------
 # Duplicate URL handling tests
 # -------------------------
+
 
 def test_crawl_avoids_duplicate_urls() -> None:
     crawler = WebCrawler(
@@ -206,6 +214,7 @@ def test_crawl_avoids_duplicate_urls() -> None:
 # Additional crawler edge-case tests for full coverage
 # -------------------------
 
+
 def test_crawl_skips_failed_fetch() -> None:
     crawler = WebCrawler(
         "https://quotes.toscrape.com/",
@@ -240,6 +249,7 @@ def test_crawl_respects_max_depth() -> None:
     assert len(pages) == 1
     assert pages[0].url == "https://quotes.toscrape.com/"
 
+
 def test_crawl_skips_already_visited_url() -> None:
     crawler = WebCrawler(
         "https://quotes.toscrape.com/",
@@ -259,7 +269,8 @@ def test_crawl_skips_already_visited_url() -> None:
         pages = crawler.crawl()
 
     assert len(pages) == 1
-    
+
+
 def test_crawler_creates_retry_session() -> None:
     crawler = WebCrawler(
         "https://quotes.toscrape.com/",
@@ -267,10 +278,11 @@ def test_crawler_creates_retry_session() -> None:
     )
 
     assert crawler.session is not None
-    
+
 # -------------------------
 # Canonicalisation tests
 # -------------------------
+
 
 def test_normalise_url_canonicalises_first_paginated_page() -> None:
     crawler = WebCrawler("https://quotes.toscrape.com/", politeness_delay=0)
@@ -280,6 +292,7 @@ def test_normalise_url_canonicalises_first_paginated_page() -> None:
     )
 
     assert result == "https://quotes.toscrape.com/tag/simile"
+
 
 def test_crawler_does_not_queue_duplicate_links() -> None:
     crawler = WebCrawler(

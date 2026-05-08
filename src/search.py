@@ -12,6 +12,7 @@ import re
 import math
 import difflib
 
+
 class SearchEngine:
     """
     Search engine using an inverted index.
@@ -23,7 +24,6 @@ class SearchEngine:
     - TF-IDF ranked retrieval
     - spelling suggestions for missed queries
     """
-
 
     def __init__(self, indexer: InvertedIndexer) -> None:
         """Initialise the search engine with an existing inverted index."""
@@ -112,8 +112,9 @@ class SearchEngine:
 
             if document_frequency == 0:
                 continue
-            
-            # Smoothed IDF avoids division by zero and keeps rare terms valuable.
+
+            # Smoothed IDF avoids division by zero
+            # and keeps rare terms valuable.
             inverse_document_frequency = math.log(
                 (total_documents + 1) / (document_frequency + 1)
             ) + 1
@@ -198,7 +199,8 @@ class SearchEngine:
                     phrase_found = False
                     break
 
-                # The next token must appear exactly one position after the previous.
+                # The next token must appear exactly
+                # one position after the previous.
                 if start_position + offset not in posting["positions"]:
                     phrase_found = False
                     break
@@ -294,7 +296,7 @@ class SearchEngine:
                 "results": [],
                 "suggestions": [],
                 "message": "Please provide a query to find.",
-                
+
             }
 
         # Multi-word queries are checked as exact phrases first.
@@ -302,9 +304,12 @@ class SearchEngine:
 
         if phrase_results:
             return {
-                "results": [(doc_id, "exact_phrase") for doc_id in phrase_results],
-                "suggestions": [],
-                "message": "Exact phrase matches found.",
+                "results":
+                    [(doc_id, "exact_phrase") for doc_id in phrase_results],
+                "suggestions":
+                    [],
+                "message":
+                    "Exact phrase matches found.",
             }
 
         # If no phrase match exists, return broader ranked results.
@@ -324,8 +329,14 @@ class SearchEngine:
             "message": "No results found.",
         }
 
-    def text_contains_exact_phrase(self, doc_id: str, tokens: list[str]) -> bool:
-        """Check that phrase terms are separated only by spaces in original text."""
+    def text_contains_exact_phrase(
+        self,
+        doc_id: str,
+        tokens: list[str]
+    ) -> bool:
+        """
+        Check that phrase terms are separated only by spaces in original text.
+        """
         text = self.indexer.document_texts.get(doc_id, "")
 
         if not text:
@@ -334,6 +345,10 @@ class SearchEngine:
         # Do not allow phrase matching across artificial field boundaries.
         text = text.replace("BOUNDARYTOKEN", " BOUNDARYTOKEN ")
 
-        pattern = r"\b" + r"\s+".join(re.escape(token) for token in tokens) + r"\b"
+        pattern = (
+            r"\b"
+            + r"\s+".join(re.escape(token) for token in tokens)
+            + r"\b"
+        )
 
         return re.search(pattern, text, flags=re.IGNORECASE) is not None

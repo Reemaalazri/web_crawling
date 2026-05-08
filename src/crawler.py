@@ -74,7 +74,8 @@ class WebCrawler:
             "User-Agent": "COMP3011-WebCrawler/1.0"
         }
 
-        # Reuse one session for efficiency and configure retries for transient errors.
+        # Reuse one session for efficiency and
+        # configure retries for transient errors.
         self.session = requests.Session()
 
         retry_strategy = Retry(
@@ -99,21 +100,27 @@ class WebCrawler:
         # Each frontier item stores the URL and its depth from the start page.
         frontier: Deque[tuple[str, int]] = deque([(self.start_url, 0)])
 
-        # queued prevents the same URL being added many times before it is visited.
+        # queued prevents the same URL being added many times
+        # before it is visited.
         queued: set[str] = {self.start_url}
         visited: set[str] = set()
         crawled_pages: list[CrawledPage] = []
 
         while frontier:
 
-            # Stop early if a page limit is used during testing or demonstrations.
-            if self.max_pages is not None and len(crawled_pages) >= self.max_pages:
+            # Stop early if a page limit is used during
+            # testing or demonstrations.
+            if (
+                self.max_pages is not None
+                and len(crawled_pages) >= self.max_pages
+            ):
                 break
 
             current_url, depth = frontier.popleft()
             queued.discard(current_url)
 
-            # Skip URLs already processed or deeper than the allowed crawl depth.
+            # Skip URLs already processed or deeper than
+            # the allowed crawl depth.
             if current_url in visited:
                 continue
 
@@ -138,7 +145,8 @@ class WebCrawler:
                     frontier.append((link, depth + 1))
                     queued.add(link)
 
-            # Wait between successful crawl steps to respect the politeness window.
+            # Wait between successful crawl steps
+            # to respect the politeness window.
             if frontier:
                 time.sleep(self.politeness_delay)
 
@@ -171,7 +179,8 @@ class WebCrawler:
 
         except requests.RequestException as error:
 
-            # Fail gracefully so one broken request does not stop the full crawl.
+            # Fail gracefully so one broken request
+            # does not stop the full crawl.
             print(f"[Crawler warning] Could not fetch {url}: {error}")
             return None
 
@@ -215,7 +224,7 @@ class WebCrawler:
             return False
 
         return self._is_internal_url(url)
-    
+
     def _is_internal_url(self, url: str) -> bool:
         """
         Check whether a URL belongs to the target domain.
@@ -242,14 +251,15 @@ class WebCrawler:
         """
         parsed = urlparse(url)
 
-        # Remove fragments such as #section because they point to the same page.
+        # Remove fragments such as
+        # section because they point to the same page.
         cleaned = parsed._replace(fragment="")
         normalised = cleaned.geturl()
 
         # Remove trailing slashes from non-root paths to avoid duplicate URLs.
         if normalised.endswith("/") and parsed.path != "/":
             normalised = normalised.rstrip("/")
-        
+
         # Canonicalise first paginated tag pages because
         # /tag/name and /tag/name/page/1 contain duplicate content.
         if "/tag/" in normalised and normalised.endswith("/page/1"):

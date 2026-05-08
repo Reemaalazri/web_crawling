@@ -10,6 +10,7 @@ from src.crawler import CrawledPage
 # Tokenizer tests
 # -------------------------
 
+
 def test_tokenize_lowercases_words() -> None:
     tokens = tokenize("Good Friends")
 
@@ -37,6 +38,7 @@ def test_tokenize_handles_empty_text() -> None:
 # Document registration tests
 # -------------------------
 
+
 def test_add_document_stores_metadata() -> None:
     indexer = InvertedIndexer()
 
@@ -53,6 +55,7 @@ def test_add_document_stores_metadata() -> None:
 # Frequency indexing tests
 # -------------------------
 
+
 def test_index_document_counts_word_frequencies() -> None:
     indexer = InvertedIndexer()
 
@@ -67,6 +70,7 @@ def test_index_document_counts_word_frequencies() -> None:
 # -------------------------
 # Positional indexing tests
 # -------------------------
+
 
 def test_index_document_stores_word_positions() -> None:
     indexer = InvertedIndexer()
@@ -83,6 +87,7 @@ def test_index_document_stores_word_positions() -> None:
 # -------------------------
 # HTML text extraction and page indexing tests
 # -------------------------
+
 
 def test_extract_text_removes_html_tags() -> None:
     html = """
@@ -123,6 +128,7 @@ def test_index_page_indexes_html_content() -> None:
 # Index storage tests
 # -------------------------
 
+
 def test_save_and_load_index(tmp_path) -> None:
     indexer = InvertedIndexer()
     indexer.add_document("1", "https://quotes.toscrape.com/page/1")
@@ -140,6 +146,7 @@ def test_save_and_load_index(tmp_path) -> None:
 # -------------------------
 # Document frequency tests
 # -------------------------
+
 
 def test_get_document_frequency_counts_documents() -> None:
     indexer = InvertedIndexer()
@@ -170,6 +177,7 @@ def test_get_document_frequency_returns_zero_for_missing_token() -> None:
 # -------------------------
 # Quote-specific extraction tests
 # -------------------------
+
 
 def test_extract_text_ignores_sidebar_content() -> None:
     html = """
@@ -202,6 +210,7 @@ def test_extract_text_ignores_sidebar_content() -> None:
 # Document snippet tests
 # -------------------------
 
+
 def test_add_document_stores_snippet() -> None:
     indexer = InvertedIndexer()
 
@@ -233,4 +242,6 @@ def test_index_page_stores_snippet() -> None:
 
     indexer.index_page("1", page)
 
-    assert "A meaningful quote appears here." in indexer.documents["1"]["snippet"]
+    assert "A meaningful quote appears here." in (
+        indexer.documents["1"]["snippet"]
+    )

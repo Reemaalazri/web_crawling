@@ -48,6 +48,7 @@ def test_search_word_handles_empty_query() -> None:
 # Multi-word conjunctive search tests
 # -------------------------
 
+
 def test_search_all_terms_returns_documents_containing_all_terms() -> None:
     indexer = InvertedIndexer()
 
@@ -89,6 +90,7 @@ def test_search_all_terms_handles_special_characters() -> None:
 # TF-IDF ranking tests
 # -------------------------
 
+
 def test_calculate_tfidf_score_prefers_higher_term_frequency() -> None:
     indexer = InvertedIndexer()
 
@@ -116,6 +118,7 @@ def test_calculate_tfidf_score_returns_zero_for_empty_index() -> None:
 # -------------------------
 # Ranked retrieval tests
 # -------------------------
+
 
 def test_search_ranked_orders_documents_by_score() -> None:
     indexer = InvertedIndexer()
@@ -147,6 +150,7 @@ def test_search_ranked_returns_empty_for_unknown_query() -> None:
 # Exact phrase matching tests
 # -------------------------
 
+
 def test_contains_exact_phrase_returns_true_for_adjacent_terms() -> None:
     indexer = InvertedIndexer()
     indexer.index_document("1", "good friends are here")
@@ -174,6 +178,7 @@ def test_contains_exact_phrase_returns_false_for_empty_tokens() -> None:
 # -------------------------
 # Phrase search tests
 # -------------------------
+
 
 def test_search_phrase_returns_matching_documents() -> None:
     indexer = InvertedIndexer()
@@ -213,6 +218,7 @@ def test_search_phrase_handles_empty_query() -> None:
 # Query suggestion tests
 # -------------------------
 
+
 def test_suggest_terms_returns_close_match_for_misspelling() -> None:
     indexer = InvertedIndexer()
     indexer.index_document("1", "good friends forever")
@@ -246,6 +252,7 @@ def test_suggest_terms_handles_empty_query() -> None:
 # -------------------------
 # Full query processing tests
 # -------------------------
+
 
 def test_find_returns_exact_phrase_matches_first() -> None:
     indexer = InvertedIndexer()
@@ -300,6 +307,7 @@ def test_find_handles_empty_query() -> None:
 # Additional edge-case tests
 # -------------------------
 
+
 def test_search_all_terms_handles_empty_query() -> None:
     indexer = InvertedIndexer()
     search_engine = SearchEngine(indexer)
@@ -325,7 +333,8 @@ def test_search_ranked_handles_empty_query() -> None:
     assert search_engine.search_ranked("") == []
 
 
-def test_contains_exact_phrase_returns_false_when_first_token_missing() -> None:
+def test_contains_exact_phrase_returns_false_when_first_token_missing(
+) -> None:
     indexer = InvertedIndexer()
     indexer.index_document("1", "good friends")
 
@@ -334,7 +343,8 @@ def test_contains_exact_phrase_returns_false_when_first_token_missing() -> None:
     assert not search_engine.contains_exact_phrase("1", ["missing", "friends"])
 
 
-def test_contains_exact_phrase_returns_false_when_later_token_missing() -> None:
+def test_contains_exact_phrase_returns_false_when_later_token_missing(
+) -> None:
     indexer = InvertedIndexer()
     indexer.index_document("1", "good friends")
 
@@ -351,6 +361,7 @@ def test_contains_exact_phrase_ignores_tokens_from_other_documents() -> None:
     search_engine = SearchEngine(indexer)
 
     assert not search_engine.contains_exact_phrase("1", ["good", "missing"])
+
 
 def test_search_phrase_does_not_cross_comma() -> None:
     indexer = InvertedIndexer()

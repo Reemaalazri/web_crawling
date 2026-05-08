@@ -35,6 +35,7 @@ def tokenize(text: str) -> list[str]:
     # Keep only letters and numbers, then normalise everything to lowercase.
     return re.findall(r"[a-zA-Z0-9]+", text.lower())
 
+
 class InvertedIndexer:
     """
     Builds an inverted index from crawled pages.
@@ -43,15 +44,15 @@ class InvertedIndexer:
     """
 
     def __init__(self) -> None:
-        
-        # token -> doc_id -> {"frequency": count, "positions": [word positions]}
+
+        # token -> doc_id ->
+        # {"frequency": count, "positions": [word positions]}
         self.index: dict[str, dict[str, dict[str, list[int] | int]]] = {}
 
         # doc_id -> metadata used when displaying search results.
         self.documents: dict[str, dict[str, str]] = {}
-        
-        self.document_texts: dict[str,str] = {}
 
+        self.document_texts: dict[str, str] = {}
 
     def add_document(
         self,
@@ -86,7 +87,7 @@ class InvertedIndexer:
         """
         tokens = tokenize(text)
         self.document_texts.setdefault(doc_id, text)
-        
+
         # Store both frequency and positions for each token occurrence.
         for position, token in enumerate(tokens):
             if token not in self.index:
@@ -116,7 +117,7 @@ class InvertedIndexer:
         text = self.extract_text(page.html)
 
         self.document_texts[doc_id] = text
-        
+
         # Create a short preview without artificial boundary markers.
         snippet = text.replace(BOUNDARY_TOKEN, "").strip()[:250]
 
@@ -171,7 +172,7 @@ class InvertedIndexer:
         }
 
         path = Path(file_path)
-        
+
         # Create the output folder automatically if it does not exist.
         path.parent.mkdir(parents=True, exist_ok=True)
 

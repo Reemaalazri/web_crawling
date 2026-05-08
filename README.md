@@ -305,6 +305,9 @@ Average query time: 0.001459s
 - difflib
 - JSON
 
+## PEP8 
+The implementation follows PEP8 mstyling conventions throughout the project, including consistent identation, spacing, naming, conventions, line formattig and documnetation. In this code, the final codebase has no remaining linting warnings or formatting errors.
+
 ## Architecture and Search Engine Design Rationale
 The system follows a modular search engine architecture consisting of three main stages:
 1. Crawling
